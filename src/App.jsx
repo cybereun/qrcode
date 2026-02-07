@@ -1,12 +1,42 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import './index.css';
 
 const App = () => {
-  const [url, setUrl] = useState(''); // 초기값은 비워두어 플레이스홀더가 보이게 함
+  const [activeTab, setActiveTab] = useState('url'); // 'url', 'text', 'contact'
+
+  // 상태 관리
+  const [url, setUrl] = useState('');
+  const [text, setText] = useState('');
+  const [contact, setContact] = useState({ name: '', phone: '', email: '' });
+
   const [color, setColor] = useState('#000000');
   const [size, setSize] = useState(200);
   const qrRef = useRef(null);
+
+  // QR 코드 값 계산 (메모이제이션)
+  const qrValue = useMemo(() => {
+    if (activeTab === 'url') {
+      if (!url.trim()) return '';
+      // URL 모드일 때 스키마 자동 추가
+      return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+    }
+    if (activeTab === 'text') {
+      return text;
+    }
+    if (activeTab === 'contact') {
+      const { name, phone, email } = contact;
+      if (!name && !phone && !email) return '';
+      // vCard 3.0 포맷 생성
+      return `BEGIN:VCARD
+VERSION:3.0
+FN:${name}
+TEL:${phone}
+EMAIL:${email}
+END:VCARD`;
+    }
+    return '';
+  }, [activeTab, url, text, contact]);
 
   // QR 코드 다운로드 함수
   const downloadQR = () => {
@@ -15,14 +45,13 @@ const App = () => {
       const pngUrl = canvas.toDataURL('image/png');
       const downloadLink = document.createElement('a');
       downloadLink.href = pngUrl;
-      downloadLink.download = '내-귀여운-qr.png';
+      downloadLink.download = `my-cute-qr-${activeTab}.png`;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
     }
   };
 
-  // 색상 팔레트 정의
   const colors = [
     '#000000', // 기본 검정
     '#FF9AA2', // 소프트 핑크
@@ -37,30 +66,87 @@ const App = () => {
       <div className="badge">✨ 나만의 QR 만들기 ✨</div>
       <h1 className="title">Cute QR Maker</h1>
 
-      {/* 입력 섹션 */}
-      <div className="input-container">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#FF9AA2"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }}
+      {/* 탭 메뉴 */}
+      <div className="tab-container">
+        <button
+          className={`tab-btn ${activeTab === 'url' ? 'active' : ''}`}
+          onClick={() => setActiveTab('url')}
         >
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-        </svg>
-        <input
-          type="text"
-          placeholder="https://example.com"
-          className="cute-input"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
+          🔗 URL
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'text' ? 'active' : ''}`}
+          onClick={() => setActiveTab('text')}
+        >
+          📝 텍스트
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'contact' ? 'active' : ''}`}
+          onClick={() => setActiveTab('contact')}
+        >
+          👤 연락처
+        </button>
+      </div>
+
+      {/* 입력 섹션: 탭에 따라 다르게 표시 */}
+      <div className="input-container">
+
+        {activeTab === 'url' && (
+          <div style={{ position: 'relative', width: '100%' }}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20" height="20" viewBox="0 0 24 24"
+              fill="none" stroke="#FF9AA2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }}
+            >
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            <input
+              type="text"
+              placeholder="https://example.com"
+              className="cute-input with-icon"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+          </div>
+        )}
+
+        {activeTab === 'text' && (
+          <textarea
+            className="cute-textarea"
+            placeholder="여기에 텍스트를 입력하세요..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+        )}
+
+        {activeTab === 'contact' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+            <input
+              type="text"
+              placeholder="이름 (Name)"
+              className="cute-input"
+              value={contact.name}
+              onChange={(e) => setContact({ ...contact, name: e.target.value })}
+            />
+            <input
+              type="tel"
+              placeholder="전화번호 (Phone)"
+              className="cute-input"
+              value={contact.phone}
+              onChange={(e) => setContact({ ...contact, phone: e.target.value })}
+            />
+            <input
+              type="email"
+              placeholder="이메일 (Email)"
+              className="cute-input"
+              value={contact.email}
+              onChange={(e) => setContact({ ...contact, email: e.target.value })}
+            />
+          </div>
+        )}
+
       </div>
 
       {/* QR 표시 영역 */}
@@ -79,9 +165,9 @@ const App = () => {
           boxSizing: 'border-box'
         }}
       >
-        {url ? (
+        {qrValue ? (
           <QRCodeCanvas
-            value={url}
+            value={qrValue}
             size={size}
             fgColor={color}
             bgColor={"#FFFFFF"}
@@ -91,7 +177,7 @@ const App = () => {
         ) : (
           <div style={{ color: '#DDD', textAlign: 'center', fontSize: '0.9rem' }}>
             <span style={{ fontSize: '2rem', display: 'block', marginBottom: '0.5rem' }}>🧇</span>
-            주소를 입력해주세요...
+            정보를 입력해주세요...
           </div>
         )}
       </div>
@@ -128,7 +214,7 @@ const App = () => {
       </div>
 
       {/* 다운로드 버튼 */}
-      <button className="download-btn" onClick={downloadQR} disabled={!url} style={{ opacity: url ? 1 : 0.5, cursor: url ? 'pointer' : 'not-allowed' }}>
+      <button className="download-btn" onClick={downloadQR} disabled={!qrValue} style={{ opacity: qrValue ? 1 : 0.5, cursor: qrValue ? 'pointer' : 'not-allowed' }}>
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
