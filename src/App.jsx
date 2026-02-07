@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
 const tabs = {
