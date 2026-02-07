@@ -1,6 +1,0 @@
-node_modules/
-# dist/ is included for Pages deployments
-.vite/
-.env
-.env.local
-.DS_Store
