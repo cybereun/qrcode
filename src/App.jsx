@@ -8,7 +8,14 @@ const App = () => {
   // 상태 관리
   const [url, setUrl] = useState('');
   const [text, setText] = useState('');
-  const [contact, setContact] = useState({ name: '', phone: '', email: '' });
+  const [contact, setContact] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    company: '',
+    address: '',
+    note: ''
+  });
 
   const [color, setColor] = useState('#000000');
   const [size, setSize] = useState(200);
@@ -25,14 +32,21 @@ const App = () => {
       return text;
     }
     if (activeTab === 'contact') {
-      const { name, phone, email } = contact;
-      if (!name && !phone && !email) return '';
+      const { name, phone, email, company, address, note } = contact;
+      // 필수값 체크는 없지만 하나라도 있으면 생성
+      if (!name && !phone && !email && !company && !address && !note) return '';
+
       // vCard 3.0 포맷 생성
+      // ADR 포맷: ADR:;;Street Address;City;Region;Postal Code;Country
+      // 여기서는 심플하게 전체 주소를 Street Address 자리에 넣습니다.
       return `BEGIN:VCARD
 VERSION:3.0
 FN:${name}
 TEL:${phone}
 EMAIL:${email}
+ORG:${company}
+ADR:;;${address};;;;
+NOTE:${note}
 END:VCARD`;
     }
     return '';
@@ -122,7 +136,7 @@ END:VCARD`;
         )}
 
         {activeTab === 'contact' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', width: '100%' }}>
             <input
               type="text"
               placeholder="이름 (Name)"
@@ -143,6 +157,27 @@ END:VCARD`;
               className="cute-input"
               value={contact.email}
               onChange={(e) => setContact({ ...contact, email: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="직장명 (Company)"
+              className="cute-input"
+              value={contact.company}
+              onChange={(e) => setContact({ ...contact, company: e.target.value })}
+            />
+            <input
+              type="text"
+              placeholder="주소 (Address)"
+              className="cute-input"
+              value={contact.address}
+              onChange={(e) => setContact({ ...contact, address: e.target.value })}
+            />
+            <textarea
+              placeholder="메모 (Note)"
+              className="cute-textarea"
+              style={{ minHeight: '80px' }}
+              value={contact.note}
+              onChange={(e) => setContact({ ...contact, note: e.target.value })}
             />
           </div>
         )}
