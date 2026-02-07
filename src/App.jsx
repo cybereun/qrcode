@@ -21,6 +21,8 @@ const App = () => {
   const [size, setSize] = useState(200);
   const qrRef = useRef(null);
 
+  const [showMore, setShowMore] = useState(false); // 추가 정보 토글 상태
+
   // QR 코드 값 계산 (메모이제이션)
   const qrValue = useMemo(() => {
     if (activeTab === 'url') {
@@ -137,6 +139,7 @@ END:VCARD`;
 
         {activeTab === 'contact' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', width: '100%' }}>
+            {/* 기본 정보 */}
             <input
               type="text"
               placeholder="이름 (Name)"
@@ -158,27 +161,52 @@ END:VCARD`;
               value={contact.email}
               onChange={(e) => setContact({ ...contact, email: e.target.value })}
             />
-            <input
-              type="text"
-              placeholder="직장명 (Company)"
-              className="cute-input"
-              value={contact.company}
-              onChange={(e) => setContact({ ...contact, company: e.target.value })}
-            />
-            <input
-              type="text"
-              placeholder="주소 (Address)"
-              className="cute-input"
-              value={contact.address}
-              onChange={(e) => setContact({ ...contact, address: e.target.value })}
-            />
-            <textarea
-              placeholder="메모 (Note)"
-              className="cute-textarea"
-              style={{ minHeight: '80px' }}
-              value={contact.note}
-              onChange={(e) => setContact({ ...contact, note: e.target.value })}
-            />
+
+            {/* 추가 정보 토글 버튼 */}
+            <button
+              onClick={() => setShowMore(!showMore)}
+              style={{
+                background: 'transparent',
+                color: '#888',
+                fontSize: '0.9rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                padding: '0.5rem',
+                border: '1px dashed #ddd',
+                borderRadius: '12px'
+              }}
+            >
+              {showMore ? '간단히 입력하기 ▲' : '직장, 주소, 메모 추가하기 ▼'}
+            </button>
+
+            {/* 추가 정보 (조건부 렌더링) */}
+            {showMore && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', animation: 'fadeIn 0.3s ease' }}>
+                <input
+                  type="text"
+                  placeholder="직장명 (Company)"
+                  className="cute-input"
+                  value={contact.company}
+                  onChange={(e) => setContact({ ...contact, company: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="주소 (Address)"
+                  className="cute-input"
+                  value={contact.address}
+                  onChange={(e) => setContact({ ...contact, address: e.target.value })}
+                />
+                <textarea
+                  placeholder="메모 (Note)"
+                  className="cute-textarea"
+                  style={{ minHeight: '80px' }}
+                  value={contact.note}
+                  onChange={(e) => setContact({ ...contact, note: e.target.value })}
+                />
+              </div>
+            )}
           </div>
         )}
 
